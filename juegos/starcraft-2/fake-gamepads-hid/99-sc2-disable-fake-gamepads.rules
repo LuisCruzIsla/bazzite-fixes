@@ -1,0 +1,18 @@
+# StarCraft II: evitar que dispositivos HID aparezcan como joysticks virtuales
+# Destino: /etc/udev/rules.d/99-sc2-disable-fake-gamepads.rules
+#
+# No afecta gamepads reales (Xbox 045e, PlayStation 054c, Nintendo 057e).
+# Adapta los VID:PID a tu hardware — usa `lsusb` para detectarlos.
+#
+# Recargar tras instalar:
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger --subsystem-match=input
+
+# Logitech G PRO X Gaming Headset
+SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0aaa", ENV{ID_INPUT_JOYSTICK}="0"
+
+# Logitech Lightspeed Receiver (ratón G703 inalámbrico)
+SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c539", ENV{ID_INPUT_JOYSTICK}="0"
+
+# Kingston HyperX Alloy Origins Core teclado
+SUBSYSTEM=="input", ATTRS{idVendor}=="0951", ATTRS{idProduct}=="16e6", ENV{ID_INPUT_JOYSTICK}="0"

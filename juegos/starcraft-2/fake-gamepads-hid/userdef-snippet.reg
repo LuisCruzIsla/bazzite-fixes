@@ -1,0 +1,20 @@
+WINE REGISTRY Version 2
+;; Snippet para añadir al final de <prefix>/userdef.reg
+;; Wine usa userdef.reg como plantilla al regenerar user.reg, así
+;; estas claves sobreviven a la regeneración del prefix.
+
+[Software\\Wine\\DirectInput] 1778565438
+"DisableInput"=dword:00000001
+"MouseWarpOverride"="enable"
+
+[Software\\Wine\\DirectInput\\Joysticks\\Kingston HyperX Alloy Origins Core] 1779337668
+"Disabled"="Y"
+
+[Software\\Wine\\DirectInput\\Joysticks\\Logitech PRO X] 1778565438
+"Disabled"="Y"
+
+[Software\\Wine\\DirectInput\\Joysticks\\Logitech USB Receiver] 1779337451
+"Disabled"="Y"
+
+[Software\\Wine\\DirectInput\\Joysticks\\Logitech G PRO X Gaming Headset] 1778565438
+"Disabled"="Y"
