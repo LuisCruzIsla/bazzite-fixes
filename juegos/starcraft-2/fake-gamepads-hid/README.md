@@ -1,7 +1,7 @@
 # StarCraft II: dispositivos HID detectados como mandos virtuales
 
-> **Estado:** solución confirmada y validada.
-> Las cuatro capas descritas a continuación eliminan el problema y sobreviven a actualizaciones de Battle.net, regeneraciones del prefix de Proton y reinicios.
+> **Estado:** solución confirmada y validada, sobrevive a suspend/resume y actualizaciones.
+> Las cuatro capas descritas a continuación eliminan el problema de forma persistente.
 
 ## Síntoma
 
@@ -29,13 +29,13 @@ Ver carpeta [`casos/`](./casos/) para hardware específico confirmado.
 
 ## Causa raíz
 
-Tres capas independientes contribuyen al problema. **Las guías comunes parchean sólo una y por eso fallan intermitentemente:**
+Tres capas independientes contribuyen al problema. **Las guías comunes parchean sólo una y por eso fallan intermitentemente o tras suspend/resume:**
 
 1. **Kernel/udev:** dispositivos HID con múltiples interfaces reciben el flag `ID_INPUT_JOYSTICK=1` heurísticamente.
-2. **Wine/Proton:** la regeneración del prefix (al actualizar Battle.net o al reiniciar Proton) borra las claves `HKCU\Software\Wine\DirectInput\Joysticks\*` con `Disabled=Y`.
-3. **Steam Input (`extest`):** Steam inyecta `libextest.so` vía `LD_PRELOAD` en procesos lanzados desde Steam. Intercepta HID raw y emite gamepads virtuales **dentro del proceso del juego**, evadiendo cualquier filtro a nivel kernel.
+2. **Steam Input (`libextest.so`):** Steam inyecta esta librería vía `LD_PRELOAD` en procesos lanzados desde Steam (Battle.net Launcher y sus hijos, incluido SC2). Intercepta HID raw y emite gamepads virtuales **dentro del proceso**, evadiendo cualquier filtro a nivel kernel.
+3. **Wine/Proton:** la regeneración del prefix (al actualizar Battle.net o al reiniciar Proton) borra las claves `HKCU\Software\Wine\DirectInput\Joysticks\*` con `Disabled=Y`.
 
-La tercera capa es la causa más persistente y suele pasar desapercibida porque opera dentro del binario, no en el sistema.
+La capa de Steam Input es la causa más persistente y suele pasar desapercibida porque opera dentro del binario, no en el sistema. **Y se reactiva sola tras suspend o tras una actualización de Steam, incluso si "Steam Input" está marcado como desactivado en propiedades del juego.**
 
 ## Soluciones que NO funcionan (anti-patrones)
 
@@ -43,12 +43,13 @@ La tercera capa es la causa más persistente y suele pasar desapercibida porque 
 - Scripts monitor en bucle que paran servicios cada N segundos.
 - `WINEDLLOVERRIDES=xinput1_3=` solo — Proton regenera el prefix y se pierde.
 - Modificar `user.reg` directamente — Wine lo reescribe.
+- **Desactivar Steam Input sólo desde la UI de Steam** — funciona temporalmente, pero se reactiva tras suspend/resume o al actualizarse Steam. No es solución definitiva.
 
 ## Solución completa (cuatro capas redundantes)
 
 ### Capa 1: Regla udev (nivel kernel, persistente)
 
-Crear `/etc/udev/rules.d/99-sc2-disable-fake-gamepads.rules` con los VID:PID de **tus** dispositivos problemáticos. Ejemplo y plantilla genérica:
+Crear `/etc/udev/rules.d/99-sc2-disable-fake-gamepads.rules` con los VID:PID de **tus** dispositivos problemáticos:
 
 ```udev
 # Reemplaza los VID:PID por los tuyos (lsusb)
@@ -74,26 +75,37 @@ sudo udevadm trigger --subsystem-match=input
 | `28de` | Valve (Steam Controller) |
 | `0079`, `0810` | Mandos genéricos USB |
 
-### Capa 2: Desactivar Steam Input para Battle.net
+### Capa 2: Wrapper que strip `libextest.so` (la más importante)
 
-**Lo más importante y lo que falta en todas las guías de foros:**
+Steam puede reactivar Steam Input por su cuenta. Para no depender de la UI, interceptamos el `LD_PRELOAD` justo antes de que el juego arranque y eliminamos `libextest.so` quirúrgicamente — sin tocar `gameoverlayrenderer.so` (overlay de Steam) que va en la misma variable.
 
-1. Abre **Steam** (sin lanzar nada).
-2. Click derecho sobre **Battle.net** en biblioteca → **Propiedades**.
-3. Pestaña **Mando** (o **Controller**).
-4. Cambia de **Habilitar Steam Input** a **Desactivar Steam Input**.
+Copiar [`strip-extest.sh`](./strip-extest.sh) a tu PATH local:
 
-Esto impide que `libextest.so` se inyecte vía `LD_PRELOAD` en la cadena `Battle.net Launcher → Battle.net.exe → SC2_x64.exe`.
+```bash
+mkdir -p ~/.local/bin
+cp strip-extest.sh ~/.local/bin/strip-extest.sh
+chmod +x ~/.local/bin/strip-extest.sh
+```
+
+Después, en **Steam → Battle.net → Propiedades → Opciones de inicio**, anteponer la ruta del wrapper a `%command%`:
+
+```
+... /home/<TU_USUARIO>/.local/bin/strip-extest.sh %command%
+```
+
+(Las variables de entorno de la Capa 3 van antes — ver siguiente sección.)
+
+Una vez aplicado el wrapper, **es irrelevante** si Steam Input aparece como "habilitado" o "desactivado" en propiedades del juego — el wrapper neutraliza `libextest` independientemente.
 
 ### Capa 3: Variables de entorno en launch options de Steam
 
-Click derecho sobre **Battle.net** → **Propiedades** → **Opciones de inicio**:
+Las launch options completas, combinando Capa 2 y 3:
 
 ```
-PROTON_NO_XINPUT=1 PROTON_NO_UDEV_JOYSTICK=1 SDL_JOYSTICK_DISABLED=1 SDL_JOYSTICK_HIDAPI=0 SDL_GAMECONTROLLER_IGNORE_DEVICES=0xVVVV/0xPPPP,... %command%
+PROTON_NO_XINPUT=1 PROTON_NO_UDEV_JOYSTICK=1 SDL_JOYSTICK_DISABLED=1 SDL_JOYSTICK_HIDAPI=0 SDL_GAMECONTROLLER_IGNORE_DEVICES=0xVVVV/0xPPPP,... /home/<TU_USUARIO>/.local/bin/strip-extest.sh %command%
 ```
 
-Reemplaza `0xVVVV/0xPPPP` por tus VID:PID en mayúscula hexadecimal.
+Reemplaza `0xVVVV/0xPPPP` por tus VID:PID en mayúscula hexadecimal, y `<TU_USUARIO>` por tu usuario.
 
 | Variable | Función |
 |----------|---------|
@@ -103,7 +115,7 @@ Reemplaza `0xVVVV/0xPPPP` por tus VID:PID en mayúscula hexadecimal.
 | `SDL_JOYSTICK_HIDAPI=0` | SDL no usa la ruta HIDAPI |
 | `SDL_GAMECONTROLLER_IGNORE_DEVICES` | Lista negra explícita por VID/PID |
 
-Las env vars se heredan automáticamente del Battle.net launcher a SC2_x64 — no hace falta configurarlas dentro del launcher de Battle.net.
+Las env vars y el `LD_PRELOAD` limpio se heredan automáticamente del Battle.net launcher a SC2_x64 — no hace falta configurar nada dentro del launcher de Battle.net.
 
 ### Capa 4: Persistir las claves de Wine en `userdef.reg`
 
@@ -128,15 +140,16 @@ Tras aplicar las cuatro capas, ejecutar:
 Resultado esperado:
 
 - Todos los HID problemáticos con `JOYSTICK=0`
-- Sin `libextest.so` cargado en procesos SC2
+- Sin `libextest.so` cargado en procesos Battle.net ni SC2
+- Variables `PROTON_*` y `SDL_*` heredadas en SC2
 - Mandos reales (Xbox, PS) siguen apareciendo como `/dev/input/js0`
 
-## Por qué esto sobrevive a actualizaciones
+## Por qué esto sobrevive a actualizaciones y suspend/resume
 
 | Capa | Lo que sobrevive |
 |------|------------------|
-| udev rule | Actualizaciones de Battle.net, regeneración del prefix, cambios de Proton |
-| Steam Input off | Permanece hasta que el usuario lo reactive manualmente |
+| udev rule | Actualizaciones de Battle.net, regeneración del prefix, cambios de Proton, suspend/resume |
+| Wrapper strip-extest | Reactivaciones de Steam Input por suspend, actualizaciones de Steam, sync de Steam Cloud |
 | Launch options | Permanece a menos que se editen |
 | `userdef.reg` | Wine lo respeta al regenerar `user.reg` automáticamente |
 
@@ -144,11 +157,13 @@ Las cuatro capas son redundantes a propósito: si una falla (por ejemplo una act
 
 ## Diagnóstico si vuelve a fallar
 
-1. Verificar que `extest` no esté inyectado:
+1. Verificar que ningún proceso de Battle.net o SC2 tenga `libextest` cargado:
    ```bash
-   pgrep -af SC2_x64 | grep -o "libextest"
+   for pid in $(pgrep -f "Battle.net.exe|SC2_x64"); do
+     grep -l "libextest" /proc/$pid/maps 2>/dev/null && echo "PID $pid: TIENE libextest"
+   done
    ```
-   Si aparece → Steam Input se reactivó. Repetir Capa 2.
+   Si alguno tiene → el wrapper no se ejecutó. Verificar las launch options en Steam.
 
 2. Verificar regla udev:
    ```bash
@@ -159,6 +174,12 @@ Las cuatro capas son redundantes a propósito: si una falla (por ejemplo una act
    ```bash
    grep "Joysticks" <prefix>/user.reg
    ```
+
+4. Verificar que el wrapper limpia correctamente:
+   ```bash
+   tr '\0' '\n' < /proc/$(pgrep -f Battle.net.exe | head -1)/environ | grep LD_PRELOAD
+   ```
+   No debe contener `libextest`.
 
 ## Casos confirmados
 

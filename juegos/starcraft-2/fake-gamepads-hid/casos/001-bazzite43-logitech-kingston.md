@@ -1,8 +1,15 @@
 # Caso 001 — Bazzite 43 + Logitech PRO X + Kingston HyperX
 
 **Confirmado por:** [@LuisCruzIsla](https://github.com/LuisCruzIsla)
-**Fecha:** 2026-05-27
-**Estado:** Fix funciona en producción.
+**Fecha inicial:** 2026-05-27
+**Última validación:** 2026-05-27 (post suspend/resume, con Capa 2 wrapper)
+**Estado:** Fix funciona y sobrevive a suspend.
+
+## Historia del caso
+
+La primera versión del fix tenía la Capa 2 implementada como "desactivar Steam Input en propiedades del juego" desde la UI de Steam. Funcionó hasta que el equipo se suspendió: al despertar, Steam reactivó automáticamente la inyección de `libextest.so` aunque la UI seguía marcando "Steam Input desactivado". El menú de teclas rápidas volvió a mostrar "Botón de mando X".
+
+Diagnóstico: `grep libextest /proc/<pid_battlenet>/maps` mostró que la librería estaba cargada en todos los procesos Battle.net pese a la configuración. La Capa 2 fue reemplazada por un wrapper que strip `libextest` del `LD_PRELOAD` antes de ejecutar `%command%` — solución definitiva que no depende de un toggle de Steam que puede resetearse.
 
 ## Entorno
 
@@ -16,6 +23,7 @@
 | RAM | 16 GB |
 | Runtime principal | Steam + Proton 10.0-4 |
 | Runtime alterno | Lutris + GE-Proton10-34 (umu) |
+| Battle.net | 2.51.5.17438 |
 
 ## Dispositivos HID problemáticos detectados como mandos
 
@@ -37,20 +45,22 @@ Verificado tras aplicar fix: el Xbox sigue apareciendo como `/dev/input/js0` y f
 
 ### Capa 1 — udev rule
 
+`/etc/udev/rules.d/99-sc2-disable-fake-gamepads.rules`:
+
 ```udev
 SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0aaa", ENV{ID_INPUT_JOYSTICK}="0"
 SUBSYSTEM=="input", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c539", ENV{ID_INPUT_JOYSTICK}="0"
 SUBSYSTEM=="input", ATTRS{idVendor}=="0951", ATTRS{idProduct}=="16e6", ENV{ID_INPUT_JOYSTICK}="0"
 ```
 
-### Capa 2 — Steam Input
+### Capa 2 — Wrapper strip-extest
 
-Desactivado para Battle.net (Propiedades → Mando → Desactivar Steam Input).
+`~/.local/bin/strip-extest.sh` copiado desde el repo y marcado ejecutable.
 
-### Capa 3 — Launch options
+### Capa 3 — Launch options (Steam → Battle.net → Propiedades → Opciones de inicio)
 
 ```
-PROTON_NO_XINPUT=1 PROTON_NO_UDEV_JOYSTICK=1 SDL_JOYSTICK_DISABLED=1 SDL_JOYSTICK_HIDAPI=0 SDL_GAMECONTROLLER_IGNORE_DEVICES=0x046D/0x0AAA,0x046D/0xC539,0x0951/0x16E6 %command%
+PROTON_NO_XINPUT=1 PROTON_NO_UDEV_JOYSTICK=1 SDL_JOYSTICK_DISABLED=1 SDL_JOYSTICK_HIDAPI=0 SDL_GAMECONTROLLER_IGNORE_DEVICES=0x046D/0x0AAA,0x046D/0xC539,0x0951/0x16E6 /home/lcruzisl/.local/bin/strip-extest.sh %command%
 ```
 
 ### Capa 4 — userdef.reg
@@ -73,19 +83,32 @@ PROTON_NO_XINPUT=1 PROTON_NO_UDEV_JOYSTICK=1 SDL_JOYSTICK_DISABLED=1 SDL_JOYSTIC
 "Disabled"="Y"
 ```
 
-## Salida de verificación
+## Salida de verificación (tras Capa 2 wrapper)
 
 ```
-Logitech PRO X        → event12  ID_INPUT_JOYSTICK=0
-Logitech PRO X Cons.  → event11  ID_INPUT_JOYSTICK=0
-Kingston HyperX       → event6-10 ID_INPUT_JOYSTICK=0
-Xbox Wireless Ctrl    → event23  ID_INPUT_JOYSTICK=1 (intacto, funciona)
-SC2 sin libextest.so cargado
-Menú de teclas rápidas: muestra letras del teclado correctamente
+=== Capa 1: udev rule activa para HID problemáticos ===
+  [OK] event6      [0951:16e6] Kingston HyperX Alloy Origins Core         JOYSTICK=0
+  [OK] event10     [0951:16e6] Kingston HyperX Alloy Origins Core         JOYSTICK=0
+  [OK] event11     [046d:0aaa] Logitech PRO X Consumer Control            JOYSTICK=0
+  [OK] event12     [046d:0aaa] Logitech PRO X                             JOYSTICK=0
+  [OK] event2      [046d:c539] Logitech G703 LS                           JOYSTICK=0
+
+=== Capa 2: wrapper strip-extest activo ===
+  [OK] Sin libextest cargado en ningún proceso Battle.net/SC2
+
+=== Capa 3: env vars heredadas en SC2 ===
+  [OK] PROTON_NO_XINPUT                = 1
+  [OK] PROTON_NO_UDEV_JOYSTICK         = 1
+  [OK] SDL_JOYSTICK_DISABLED           = 1
+  [OK] SDL_JOYSTICK_HIDAPI             = 0
+
+=== Mando real (si aplica) ===
+  [OK] js0: Xbox Wireless Controller
 ```
 
 ## Notas adicionales del proceso
 
 - Antes de la solución definitiva se intentaron parches con `sc2-monitor.sh` que detenía `input-remapper.service` en bucle — completamente irrelevante al problema.
-- La capa 2 (Steam Input/extest) fue la que faltaba para que el fix dejara de ser intermitente.
-- El fix sobrevivió a una actualización de Battle.net (2.51.5.17438) sin necesidad de re-aplicarlo.
+- La primera Capa 2 ("desactivar Steam Input en UI") fue insuficiente: Steam la reactivó tras una suspensión del equipo. Tuvo que reemplazarse por un wrapper que strip `libextest.so` del `LD_PRELOAD` para ser robusta.
+- El fix actual sobrevive a suspend/resume, actualizaciones de Battle.net y reaperturas de Steam.
+- Si Steam Cloud sincroniza una configuración nueva que vuelva a activar Steam Input, el wrapper sigue protegiendo — Steam Input puede quedarse "activo" en la UI sin afectar al juego.
