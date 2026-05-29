@@ -27,6 +27,8 @@ Cualquier combinación de:
 
 Ver carpeta [`casos/`](./casos/) para hardware específico confirmado.
 
+> **Síntoma relacionado pero distinto:** si el **cuadro de captura de hotkeys** en el menú de teclas rápidas no detecta ninguna pulsación (aunque el resto del teclado funcione en partida), el problema **no es éste** — es un desync del keymap entre XWayland y GNOME. Ver [`sistema/xwayland-keymap-desync/`](../../../sistema/xwayland-keymap-desync/). Los dos fixes son independientes y pueden convivir en el mismo wrapper.
+
 ## Causa raíz
 
 Tres capas independientes contribuyen al problema. **Las guías comunes parchean sólo una y por eso fallan intermitentemente o tras suspend/resume:**

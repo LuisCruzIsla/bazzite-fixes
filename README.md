@@ -14,7 +14,9 @@ Cada solución está organizada por categoría → problema → casos confirmado
 
 ### Sistema
 
-*Sin entradas todavía. Aporta la primera con un PR — ver [`CONTRIBUTING.md`](./CONTRIBUTING.md).*
+| Problema | Estado | Carpeta |
+|----------|--------|---------|
+| XWayland — layout de teclado desincronizado del compositor Wayland | Workaround confirmado | [`sistema/xwayland-keymap-desync/`](./sistema/xwayland-keymap-desync/) |
 
 ### Periféricos
 
