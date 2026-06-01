@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=IBus Toggle
+Comment=Activar/desactivar IBus a demanda (off por defecto al boot)
+Exec=/home/CAMBIAR_USUARIO/.local/bin/ibus-toggle.sh
+Icon=input-keyboard
+Terminal=false
+Categories=Utility;Settings;
+Keywords=ibus;input;method;teclado;

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=IBus Mozc XWayland (deshabilitado por usuario)
+Comment=Override de /etc/xdg/autostart - IBus se inicia bajo demanda via ibus-toggle
+Hidden=true
+X-GNOME-Autostart-enabled=false
