@@ -11,12 +11,16 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | Problema | Estado | Carpeta |
 |----------|--------|---------|
 | StarCraft II — dispositivos HID detectados como mandos virtuales | Solución confirmada | [`juegos/starcraft-2/fake-gamepads-hid/`](./juegos/starcraft-2/fake-gamepads-hid/) |
+| StarCraft II — cuadro de captura de hotkeys no detecta o detecta erróneamente | Solución confirmada (debug multi-capa con 5 capas) | [`juegos/starcraft-2/hotkey-capture-debug-multicapa/`](./juegos/starcraft-2/hotkey-capture-debug-multicapa/) |
 
 ### Sistema
 
 | Problema | Estado | Carpeta |
 |----------|--------|---------|
 | XWayland — layout de teclado desincronizado del compositor Wayland | Workaround confirmado | [`sistema/xwayland-keymap-desync/`](./sistema/xwayland-keymap-desync/) |
+| Proton 10+ Xalia intercepta input de Wine y rompe polling de teclado | Solución confirmada | [`sistema/proton-xalia-input-grab/`](./sistema/proton-xalia-input-grab/) |
+| IBus (`ibus-x11`) captura teclas y rompe polling en apps Wine/Win32 | Solución confirmada (con toggle on-demand) | [`sistema/ibus-x11-keygrab/`](./sistema/ibus-x11-keygrab/) |
+| NumLock/CapsLock atascados enmascaran el polling de teclado | Solución confirmada (chequeo trivial) | [`sistema/toggle-keys-polling-mask/`](./sistema/toggle-keys-polling-mask/) |
 
 ### Periféricos
 

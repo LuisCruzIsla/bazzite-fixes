@@ -1,9 +1,14 @@
 #!/bin/bash
-# Verificación del fix de gamepads falsos en SC2 (4 capas)
+# Verificación del fix de gamepads falsos en SC2.
 # Uso: ./verify-fix.sh
 #
 # Adapta TARGET_VIDS si tus dispositivos problemáticos no son
 # Logitech (046d) o Kingston (0951).
+#
+# Nota: este script cubre el fix de "gamepads falsos". Si tu síntoma es
+# que el cuadro de captura de hotkeys no detecta teclas o detecta erróneamente,
+# ver el verify-fix end-to-end en:
+#   juegos/starcraft-2/hotkey-capture-debug-multicapa/verify-fix.sh
 
 set -u
 

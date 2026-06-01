@@ -1,6 +1,8 @@
 # XWayland: layout de teclado desincronizado del compositor Wayland
 
 > **Estado:** workaround confirmado. La causa raíz vive en Mutter; el workaround sincroniza XWayland a mano y sobrevive a la sesión.
+>
+> **Si tu síntoma es "cuadro de captura de hotkeys de SC2 no funciona":** este desync XKB es solo **1 de las 5 capas** que pueden romperlo. Ver el meta-documento [`../../juegos/starcraft-2/hotkey-capture-debug-multicapa/`](../../juegos/starcraft-2/hotkey-capture-debug-multicapa/) que orquesta las 5 capas (Steam Input, XKB desync, Xalia, IBus, toggle keys atascados).
 
 ## Síntoma
 

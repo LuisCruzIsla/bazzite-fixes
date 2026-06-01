@@ -27,7 +27,7 @@ Cualquier combinación de:
 
 Ver carpeta [`casos/`](./casos/) para hardware específico confirmado.
 
-> **Síntoma relacionado pero distinto:** si el **cuadro de captura de hotkeys** en el menú de teclas rápidas no detecta ninguna pulsación (aunque el resto del teclado funcione en partida), el problema **no es éste** — es un desync del keymap entre XWayland y GNOME. Ver [`sistema/xwayland-keymap-desync/`](../../../sistema/xwayland-keymap-desync/). Los dos fixes son independientes y pueden convivir en el mismo wrapper.
+> **Síntoma relacionado pero distinto:** si el **cuadro de captura de hotkeys** en el menú de teclas rápidas no detecta ninguna pulsación (o detecta siempre la misma tecla equivocada), el problema **no es éste**. Es un debug multi-capa que puede involucrar hasta 5 capas (XKB desync, Xalia de Proton 10, IBus, toggle keys atascados, además del Steam Input que sí cubre este fix). Ver el meta-documento [`../hotkey-capture-debug-multicapa/`](../hotkey-capture-debug-multicapa/) que orquesta las 5 capas. Los fixes son complementarios — el wrapper de este problema cubre las capas 1-3.
 
 ## Causa raíz
 
