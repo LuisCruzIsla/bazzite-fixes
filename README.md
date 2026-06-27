@@ -21,6 +21,7 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | Proton 10+ Xalia intercepta input de Wine y rompe polling de teclado | Solución confirmada | [`sistema/proton-xalia-input-grab/`](./sistema/proton-xalia-input-grab/) |
 | IBus (`ibus-x11`) captura teclas y rompe polling en apps Wine/Win32 | Solución confirmada (con toggle on-demand) | [`sistema/ibus-x11-keygrab/`](./sistema/ibus-x11-keygrab/) |
 | NumLock/CapsLock atascados enmascaran el polling de teclado | Solución confirmada (chequeo trivial) | [`sistema/toggle-keys-polling-mask/`](./sistema/toggle-keys-polling-mask/) |
+| Vesktop/Discord — pantalla negra al compartir pantalla en NVIDIA | Solución confirmada | [`sistema/vesktop-screenshare-negro-nvidia/`](./sistema/vesktop-screenshare-negro-nvidia/) |
 
 ### Periféricos
 
