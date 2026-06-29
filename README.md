@@ -12,6 +12,7 @@ Cada solución está organizada por categoría → problema → casos confirmado
 |----------|--------|---------|
 | StarCraft II — dispositivos HID detectados como mandos virtuales | Solución confirmada | [`juegos/starcraft-2/fake-gamepads-hid/`](./juegos/starcraft-2/fake-gamepads-hid/) |
 | StarCraft II — cuadro de captura de hotkeys no detecta o detecta erróneamente | Solución confirmada (debug multi-capa con 5 capas) | [`juegos/starcraft-2/hotkey-capture-debug-multicapa/`](./juegos/starcraft-2/hotkey-capture-debug-multicapa/) |
+| Space Marine 2 — crash en NVIDIA serie 5000 (Xid 109 CTX SWITCH TIMEOUT) | Solución confirmada (vía capa upstream Pyroveil) | [`juegos/space-marine-2/precreating-shaders-crash-nvidia/`](./juegos/space-marine-2/precreating-shaders-crash-nvidia/) |
 
 ### Sistema
 
