@@ -26,7 +26,9 @@ Cada solución está organizada por categoría → problema → casos confirmado
 
 ### Periféricos
 
-*Sin entradas todavía.*
+| Problema | Estado | Carpeta |
+|----------|--------|---------|
+| Logitech G PRO X — sin ecualización ni supresión de ruido de mic en Linux (no hay G HUB) | Solución confirmada | [`perifericos/logitech-g-pro-x/`](./perifericos/logitech-g-pro-x/) |
 
 ## Cómo navegar
 

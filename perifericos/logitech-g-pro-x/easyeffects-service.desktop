@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Easy Effects (servicio)
+Comment=Aplica EQ headset + noise suppression mic al iniciar sesion
+Exec=flatpak run com.github.wwmm.easyeffects --hide-window
+Icon=com.github.wwmm.easyeffects
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=3
