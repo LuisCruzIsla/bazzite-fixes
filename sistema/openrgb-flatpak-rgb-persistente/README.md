@@ -115,6 +115,17 @@ Claves del unit (ver archivo):
 - `ExecStartPost` — tras un `sleep`, **refuerza** el color con varios pases `--client localhost --mode direct --color` (rellena teclas que el primer paso no cubre). Prefijo `-` = no aborta si un pase falla.
 - `ExecStop=flatpak kill` — mata el proceso real (systemd solo no puede, por el scope de Flatpak).
 
+**Costo del servidor vivo (y por qué NO hay input lag).** El proceso mantiene el color en dispositivos Direct-only, pero su costo es marginal: ~25 MB de RAM, un porcentaje bajo de **un solo núcleo** en reposo (color estático, sin recálculo de efectos por software) y **cero GPU**.
+
+Lo importante para gaming: el servidor **no añade latencia** a teclado ni mouse. OpenRGB abre sólo descriptores **`hidraw*` (canal de control RGB) e `i2c-*`** — nunca `event*` (evdev). La entrada viaja por otra ruta del kernel (HID → evdev → libinput → compositor), físicamente separada del canal por el que OpenRGB escribe el color. Verificable:
+
+```bash
+ls -l /proc/$(pgrep -x openrgb)/fd | grep -oE 'hidraw[0-9]+|event[0-9]+|i2c-[0-9]+' | sort -u
+# debe listar hidraw* e i2c-*, NUNCA event*
+```
+
+Si aun asi se quiere cero proceso durante el juego, existe la via *oneshot* (aplicar el perfil y cerrar), a costa de perder los dispositivos Direct-only y la reaplicacion en hotplug.
+
 ### Paso 5 — Re-detección en hotplug (teclado/mouse)
 
 Reiniciar el servicio en la reconexión fuerza a OpenRGB a re-enumerar y reaplicar el color. **No basta con que udev ejecute `systemctl`**: el worker de udev corre en el dominio SELinux `udev_t`, muy confinado, y no alcanza el bus del usuario — el restart falla en silencio (exit 1). La vía que funciona tiene **dos piezas**:
