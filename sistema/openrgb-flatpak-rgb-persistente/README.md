@@ -57,6 +57,7 @@ El problema es multi-capa; el síntoma se manifiesta en una capa distinta de la 
 - **Confiar en que `--profile` al arrancar deje verde un teclado Direct-only.** El perfil carga ("Profile loading: Succeeded") pero el teclado **no queda cubierto al 100%**. Hay que reforzar con un push explícito de color tras levantar el servidor.
 - **`Type=simple` + `flatpak run` sin limpiar huérfanos.** El proceso escapa al cgroup; el `stop` no lo mata y el puerto 6742 queda ocupado. Sin `flatpak kill` en `ExecStartPre`/`ExecStop`, el servicio no reinicia bien.
 - **Editar en la GUI mientras el servicio corre.** GUI y servidor pelean por los dispositivos. Parar el servicio antes de editar.
+- **`RUN+="systemctl --user ..."` en la regla udev.** El worker de udev (`udev_t`) no alcanza el bus del usuario; el restart falla con exit 1 aunque `udevadm test` muestre el `RUN` correcto. Además `--machine` requiere `systemd-machined`, que el worker de udev no activa. La solución es delegar en PID1 vía `SYSTEMD_WANTS` (ver Paso 5).
 
 ## Solución
 
@@ -116,16 +117,29 @@ Claves del unit (ver archivo):
 
 ### Paso 5 — Re-detección en hotplug (teclado/mouse)
 
-Para que el color se reaplique al reconectar un dispositivo, una regla udev reinicia el servicio en el evento `add` de esos VID:PID. Copiar [`61-openrgb-hotplug.rules`](./61-openrgb-hotplug.rules) a `/etc/udev/rules.d/`, sustituyendo los VID:PID (de `lsusb`) y `USUARIO` por el propietario de la sesión:
+Reiniciar el servicio en la reconexión fuerza a OpenRGB a re-enumerar y reaplicar el color. **No basta con que udev ejecute `systemctl`**: el worker de udev corre en el dominio SELinux `udev_t`, muy confinado, y no alcanza el bus del usuario — el restart falla en silencio (exit 1). La vía que funciona tiene **dos piezas**:
+
+1. Un **servicio de sistema** [`openrgb-hotplug.service`](./openrgb-hotplug.service) que reinicia el servicio `--user` desde el contexto de PID1 (sano), cruzando con `--machine=USUARIO@.host`.
+2. Una **regla udev** [`61-openrgb-hotplug.rules`](./61-openrgb-hotplug.rules) que sólo **etiqueta** el device (`TAG+="systemd"`, `ENV{SYSTEMD_WANTS}+="openrgb-hotplug.service"`) para que PID1 arranque ese servicio.
 
 ```bash
-sudo cp 61-openrgb-hotplug.rules /etc/udev/rules.d/
+sudo cp openrgb-hotplug.service /etc/systemd/system/     # ajustar USUARIO
+sudo cp 61-openrgb-hotplug.rules /etc/udev/rules.d/       # ajustar VID:PID
+sudo systemctl daemon-reload
 sudo udevadm control --reload-rules
 ```
 
-El reinicio se lanza con `--no-block` para no bloquear a `systemd-udevd` durante el arranque del servidor (ExecStartPost duerme unos segundos). El comando `systemctl --user --machine=USUARIO@.host` permite que udev (root) hable con el gestor systemd del usuario.
+El servicio no necesita `enable`: la regla udev lo tira bajo demanda en cada `add`. `--machine` usa `systemd-machined` (de ahí el `Wants=` en el unit); se activa solo al invocarlo desde PID1.
 
 > Un mouse inalámbrico se reconecta vía su **receptor** — usar el VID:PID del receptor (p.ej. Logitech Lightspeed `046d:c539`), no el del mouse.
+
+Probar sin desconectar físicamente (simula un replug):
+
+```bash
+sudo udevadm trigger --action=remove /sys/bus/usb/devices/<X-Y>
+sudo udevadm trigger --action=add    /sys/bus/usb/devices/<X-Y>
+# el servicio --user debe reiniciarse ~13 s despues
+```
 
 ### Paso 6 — Teclados Direct-only con chip onboard (si aplica)
 
@@ -153,7 +167,7 @@ Validación real definitiva: **reiniciar la sesión y confirmar que el color vue
 | `/etc/modules-load.d/i2c-dev.conf` | Carga el módulo en cada boot, sobrevive a `rpm-ostree`. |
 | Perfil `.orp` + servicio `--user` | En `~`; independientes de actualizaciones del Flatpak. |
 | `flatpak kill` en Pre/Stop | No depende de versión; evita huérfanos pase lo que pase. |
-| `/etc/udev/rules.d/61-openrgb-hotplug.rules` | Regla del sistema; reaplica el color en cada reconexión USB. |
+| `61-openrgb-hotplug.rules` + `openrgb-hotplug.service` | Regla + servicio de sistema; reaplican el color en cada reconexión USB. |
 | Chip onboard del teclado (Paso 6) | Grabado en el hardware; sobrevive a todo, incluso sin OpenRGB. |
 
 ## Diagnóstico si vuelve a fallar

@@ -1,0 +1,19 @@
+# Servicio de SISTEMA que reinicia el servicio --user de OpenRGB.
+# Lo arranca PID1 cuando la regla udev (SYSTEMD_WANTS) detecta la reconexion
+# de un dispositivo. Reiniciar fuerza a OpenRGB a re-enumerar el hardware y
+# reaplicar el color (no hay rescan por SDK).
+#
+# Copiar a /etc/systemd/system/ y ajustar USUARIO por el dueno de la sesion.
+# No necesita 'enable': la regla udev lo tira bajo demanda.
+#
+# --machine=USUARIO@.host cruza al gestor systemd del usuario (usa
+# systemd-machined; por eso el Wants). Se ejecuta desde el contexto de PID1,
+# no desde el worker udev, que es lo que hace que funcione.
+[Unit]
+Description=Reaplica OpenRGB al reconectar teclado/mouse (hotplug)
+Wants=systemd-machined.service
+After=systemd-machined.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl --machine=USUARIO@.host --user restart openrgb-verde.service

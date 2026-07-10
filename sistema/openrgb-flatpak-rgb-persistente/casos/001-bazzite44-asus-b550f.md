@@ -31,7 +31,7 @@
 - `--mode static` global **falló** (`Mode 'static' not available for device 'HyperX Alloy Origins Core'`) → se usó `--mode direct`.
 - Primer intento de servicio `Type=simple` con `flatpak run`: al segundo arranque quedó un **openrgb huérfano** ocupando el 6742 y el servicio entró en bucle `status=1/FAILURE`. Resuelto con `ExecStartPre=-flatpak kill` y `ExecStop=flatpak kill`.
 - El teclado no quedaba cubierto sólo con `--profile`; se añadió el refuerzo `ExecStartPost` (3 pases `--client localhost --mode direct --color 6B8E23`).
-- Regla hotplug `61-openrgb-hotplug.rules` con `--machine=lcruzisl@.host --no-block` para reaplicar al reconectar teclado/mouse.
+- **Hotplug:** primer intento con `RUN+="systemctl --user --machine=... --no-block"` en la regla udev **falló** (worker `udev_t` no alcanza el bus del usuario, y `systemd-machined` inactivo → `exit code 1` en el journal). Resuelto delegando en PID1: regla con `TAG+="systemd"` + `SYSTEMD_WANTS=openrgb-hotplug.service`, y `openrgb-hotplug.service` (sistema) que hace `systemctl --machine=lcruzisl@.host --user restart openrgb-verde.service`. Validado con `udevadm trigger --action=remove` + `--action=add` sobre `/sys/bus/usb/devices/3-3`: el servicio `--user` reinicia ~13 s después.
 
 ## Salida de verificación
 

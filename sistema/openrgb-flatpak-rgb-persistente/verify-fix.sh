@@ -45,11 +45,15 @@ else
 fi
 
 echo
-echo "=== Capa 5 (opcional): regla hotplug ==="
-if [ -f "$HOTPLUG" ]; then
+echo "=== Capa 5 (opcional): hotplug (regla udev + servicio de sistema) ==="
+HOTPLUG_SVC="/etc/systemd/system/openrgb-hotplug.service"
+if [ -f "$HOTPLUG" ] && [ -f "$HOTPLUG_SVC" ]; then
   echo "  [OK] $HOTPLUG"
+  echo "  [OK] $HOTPLUG_SVC"
+elif [ -f "$HOTPLUG" ]; then
+  echo "  [X]  falta $HOTPLUG_SVC  (la regla sola no reaplica: udev no puede reiniciar el servicio)"
 else
-  echo "  [--] sin regla hotplug (el color no se reaplica al reconectar USB)"
+  echo "  [--] sin hotplug (el color no se reaplica al reconectar USB)"
 fi
 
 echo
