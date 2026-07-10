@@ -1,0 +1,15 @@
+# Reaplica OpenRGB al reconectar dispositivos por USB (hotplug).
+# OpenRGB detecta dispositivos solo al arrancar; sin esto, un teclado/mouse
+# reconectado vuelve a su color de fabrica hasta reiniciar el servidor.
+#
+# Ajustar por linea:
+#   - idVendor / idProduct : sacar de `lsusb` (mouse inalambrico = usar el receptor)
+#   - USUARIO              : propietario de la sesion (dueno del servicio --user)
+# Instalar:
+#   sudo cp 61-openrgb-hotplug.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules
+#
+# --no-block: no bloquea a systemd-udevd mientras el servidor arranca.
+# --machine=USUARIO@.host: permite que udev (root) hable con el systemd del usuario.
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0951", ATTR{idProduct}=="16e6", RUN+="/usr/bin/systemctl --user --machine=USUARIO@.host --no-block restart openrgb-verde.service"
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="046d", ATTR{idProduct}=="c539", RUN+="/usr/bin/systemctl --user --machine=USUARIO@.host --no-block restart openrgb-verde.service"

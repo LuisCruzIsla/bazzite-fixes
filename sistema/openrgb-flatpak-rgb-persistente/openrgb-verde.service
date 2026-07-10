@@ -1,0 +1,26 @@
+# Servicio de usuario que mantiene OpenRGB vivo y aplica un perfil de color.
+# Copiar a ~/.config/systemd/user/ y ajustar:
+#   - mi-perfil : nombre del perfil .orp guardado con --save-profile
+#   - RRGGBB    : color hex sin '#' para el refuerzo (caso de un solo color)
+# Habilitar:  systemctl --user enable --now openrgb-verde.service
+[Unit]
+Description=OpenRGB - carga perfil y mantiene el proceso (dispositivos Direct-only)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# Mata cualquier huerfano de flatpak que ocupe el puerto SDK 6742 antes de arrancar.
+ExecStartPre=-/usr/bin/flatpak kill org.openrgb.OpenRGB
+ExecStart=/usr/bin/flatpak run org.openrgb.OpenRGB --server --profile mi-perfil
+# Refuerzo: tras levantar el servidor, reaplica el color varias veces por el
+# cliente SDK. Rellena teclas que el primer paso no cubre en teclados Direct-only.
+# Prefijo '-' = no aborta el arranque si un pase falla.
+ExecStartPost=-/bin/sh -c 'sleep 6; for i in 1 2 3; do /usr/bin/flatpak run org.openrgb.OpenRGB --client localhost --mode direct --color RRGGBB; sleep 1; done'
+# flatpak run escapa al cgroup del servicio; systemd solo no mata el proceso real.
+ExecStop=/usr/bin/flatpak kill org.openrgb.OpenRGB
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
