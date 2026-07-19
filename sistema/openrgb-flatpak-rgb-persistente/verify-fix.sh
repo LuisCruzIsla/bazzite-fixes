@@ -50,6 +50,13 @@ HOTPLUG_SVC="/etc/systemd/system/openrgb-hotplug.service"
 if [ -f "$HOTPLUG" ] && [ -f "$HOTPLUG_SVC" ]; then
   echo "  [OK] $HOTPLUG"
   echo "  [OK] $HOTPLUG_SVC"
+  if [ "$(systemctl is-failed openrgb-hotplug.service 2>/dev/null)" = "failed" ]; then
+    echo "  [X]  openrgb-hotplug.service en 'failed' (coldplug del boot sin sesion)."
+    echo "       Anadir 'ConditionPathExists=/run/user/UID/bus' y 'ExecStart=-' al unit. Ver Paso 5."
+    ok=1
+  else
+    echo "  [OK] openrgb-hotplug.service no esta en 'failed'"
+  fi
 elif [ -f "$HOTPLUG" ]; then
   echo "  [X]  falta $HOTPLUG_SVC  (la regla sola no reaplica: udev no puede reiniciar el servicio)"
 else

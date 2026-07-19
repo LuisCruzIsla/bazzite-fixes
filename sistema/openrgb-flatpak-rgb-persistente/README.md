@@ -58,6 +58,7 @@ El problema es multi-capa; el síntoma se manifiesta en una capa distinta de la 
 - **`Type=simple` + `flatpak run` sin limpiar huérfanos.** El proceso escapa al cgroup; el `stop` no lo mata y el puerto 6742 queda ocupado. Sin `flatpak kill` en `ExecStartPre`/`ExecStop`, el servicio no reinicia bien.
 - **Editar en la GUI mientras el servicio corre.** GUI y servidor pelean por los dispositivos. Parar el servicio antes de editar.
 - **`RUN+="systemctl --user ..."` en la regla udev.** El worker de udev (`udev_t`) no alcanza el bus del usuario; el restart falla con exit 1 aunque `udevadm test` muestre el `RUN` correcto. Además `--machine` requiere `systemd-machined`, que el worker de udev no activa. La solución es delegar en PID1 vía `SYSTEMD_WANTS` (ver Paso 5).
+- **Dejar el `openrgb-hotplug.service` sin `ConditionPathExists`.** El coldplug del boot dispara el servicio antes de que exista la sesión de usuario → queda en `failed` en cada arranque (aunque el hotplug real, ya con sesión, funcione). Condicionarlo a que exista `/run/user/UID/bus` lo omite limpiamente cuando no aplica (ver Paso 5).
 
 ## Solución
 
@@ -141,6 +142,8 @@ sudo udevadm control --reload-rules
 ```
 
 El servicio no necesita `enable`: la regla udev lo tira bajo demanda en cada `add`. `--machine` usa `systemd-machined` (de ahí el `Wants=` en el unit); se activa solo al invocarlo desde PID1.
+
+> **Importante — evitar el `failed` del arranque.** En el boot, udev emite `ACTION=add` (coldplug) para los USB **ya presentes**, antes de que exista tu sesión. En ese instante no hay bus de usuario y el `systemctl --machine --user` falla → el servicio queda en `failed` de forma permanente en cada arranque (visible en `systemctl --failed`). El unit lo evita con `ConditionPathExists=/run/user/UID/bus` (sin sesión = **skipped**, no failed) y con `ExecStart=-` (un fallo puntual tampoco ensucia el estado). Ajustar `UID` por `id -u`. El re-aplicado real en hotplug —cuando ya hay sesión— sigue funcionando igual.
 
 > Un mouse inalámbrico se reconecta vía su **receptor** — usar el VID:PID del receptor (p.ej. Logitech Lightspeed `046d:c539`), no el del mouse.
 

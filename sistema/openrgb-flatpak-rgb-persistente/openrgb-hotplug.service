@@ -9,11 +9,22 @@
 # --machine=USUARIO@.host cruza al gestor systemd del usuario (usa
 # systemd-machined; por eso el Wants). Se ejecuta desde el contexto de PID1,
 # no desde el worker udev, que es lo que hace que funcione.
+#
+# ConditionPathExists: en el arranque, udev emite ACTION=add (coldplug) para
+# los USB ya presentes, antes de que exista la sesion de usuario. Sin esta
+# condicion el servicio corre sin bus de usuario al que conectarse y queda en
+# estado 'failed' en cada boot. Con ella, si no hay sesion simplemente se
+# omite (skipped, no failed); el reintento real ocurre en el proximo hotplug.
+# Ajustar 1000 por el UID del usuario (id -u).
+#
+# ExecStart lleva '-' para que un fallo puntual (bus presente pero gestor de
+# usuario aun no listo) tampoco deje la unidad en 'failed'.
 [Unit]
 Description=Reaplica OpenRGB al reconectar teclado/mouse (hotplug)
 Wants=systemd-machined.service
 After=systemd-machined.service
+ConditionPathExists=/run/user/1000/bus
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/systemctl --machine=USUARIO@.host --user restart openrgb-verde.service
+ExecStart=-/usr/bin/systemctl --machine=USUARIO@.host --user restart openrgb-verde.service
