@@ -14,6 +14,7 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | StarCraft II — cuadro de captura de hotkeys no detecta o detecta erróneamente | Solución confirmada (debug multi-capa con 5 capas) | [`juegos/starcraft-2/hotkey-capture-debug-multicapa/`](./juegos/starcraft-2/hotkey-capture-debug-multicapa/) |
 | Space Marine 2 — crash en NVIDIA serie 5000 (Xid 109 CTX SWITCH TIMEOUT) | Solución confirmada (vía capa upstream Pyroveil) | [`juegos/space-marine-2/precreating-shaders-crash-nvidia/`](./juegos/space-marine-2/precreating-shaders-crash-nvidia/) |
 | Dota 2 — nunca entra en pantalla completa y desajusta la resolución del monitor (Wayland + NVIDIA) | Solución confirmada | [`juegos/dota-2/fullscreen-modeset-nvidia-wayland/`](./juegos/dota-2/fullscreen-modeset-nvidia-wayland/) |
+| Helldivers 2 — rendimiento muy por debajo de Windows con la GPU infrautilizada (DX11 vs DX12) | Solución confirmada | [`juegos/helldivers-2/bajo-rendimiento-dx11-proton/`](./juegos/helldivers-2/bajo-rendimiento-dx11-proton/) |
 
 ### Sistema
 
