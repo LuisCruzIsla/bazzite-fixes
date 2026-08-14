@@ -26,6 +26,7 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | NumLock/CapsLock atascados enmascaran el polling de teclado | Solución confirmada (chequeo trivial) | [`sistema/toggle-keys-polling-mask/`](./sistema/toggle-keys-polling-mask/) |
 | Vesktop/Discord — pantalla negra al compartir pantalla en NVIDIA | Solución confirmada | [`sistema/vesktop-screenshare-negro-nvidia/`](./sistema/vesktop-screenshare-negro-nvidia/) |
 | OpenRGB (Flatpak) — el RGB no se controla ni persiste tras reiniciar | Solución confirmada | [`sistema/openrgb-flatpak-rgb-persistente/`](./sistema/openrgb-flatpak-rgb-persistente/) |
+| MangoHud — solo aparece si se edita las opciones de lanzamiento de cada juego | Solución confirmada | [`sistema/mangohud-global-todos-los-juegos/`](./sistema/mangohud-global-todos-los-juegos/) |
 
 ### Periféricos
 

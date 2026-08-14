@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Reporta que upscaler tiene cargado en memoria el juego que este corriendo.
+# Uso: que-upscaler [patron-del-proceso]   (default: .exe)
+
+pat="${1:-\.exe}"
+found=0
+
+for pid in $(pgrep -f "$pat" 2>/dev/null); do
+    [ "$pid" = "$$" ] && continue
+    maps="/proc/$pid/maps"
+    [ -r "$maps" ] || continue
+
+    # Solo procesos Wine/Proton reales: descarta shells que matchean por su cmdline
+    case "$(cat "/proc/$pid/comm" 2>/dev/null)" in
+        bash|sh|zsh|pgrep|grep|que-upscaler) continue ;;
+    esac
+    grep -qiE 'ntdll\.so|wine' "$maps" || continue
+
+    name=$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -oE '[^\\/]*\.exe' | head -1)
+    [ -n "$name" ] || continue
+
+    hits=""
+    grep -qi 'nvngx_dlssg'  "$maps" && hits="$hits DLSS-FrameGen"
+    grep -qi 'nvngx_dlssd'  "$maps" && hits="$hits DLSS-RayReconstruction"
+    grep -qi 'nvngx_dlss\.' "$maps" && hits="$hits DLSS/DLAA"
+    grep -qi 'libxess'      "$maps" && hits="$hits XeSS"
+    grep -qi 'fidelityfx'   "$maps" && hits="$hits FSR"
+    grep -qi 'nvapi'        "$maps" && hits="$hits (NVAPI activo)"
+
+    printf '%-28s pid %-8s %s\n' "$name" "$pid" "${hits:-ninguno cargado}"
+    found=1
+done
+
+[ "$found" -eq 1 ] || echo "No hay ningun .exe corriendo que coincida con: $pat"
