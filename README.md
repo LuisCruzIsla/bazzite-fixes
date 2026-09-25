@@ -16,6 +16,7 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | Dota 2 — nunca entra en pantalla completa y desajusta la resolución del monitor (Wayland + NVIDIA) | Solución confirmada | [`juegos/dota-2/fullscreen-modeset-nvidia-wayland/`](./juegos/dota-2/fullscreen-modeset-nvidia-wayland/) |
 | Helldivers 2 — rendimiento muy por debajo de Windows con la GPU infrautilizada (DX11 vs DX12) | Solución confirmada | [`juegos/helldivers-2/bajo-rendimiento-dx11-proton/`](./juegos/helldivers-2/bajo-rendimiento-dx11-proton/) |
 | Warcraft III: Reforged — el login falla con "Please check your VPN" (crypt32 de Wine 11.0) | Solución confirmada | [`juegos/warcraft-3-reforged/login-vpn-error-crypt32/`](./juegos/warcraft-3-reforged/login-vpn-error-crypt32/) |
+| StarCraft: Remastered — "No se pudo descargar" al iniciar (Wine no lee el volumen de `Z:` en Fedora Atomic) | Solución confirmada | [`juegos/starcraft-remastered/descarga-falla-volumen-z/`](./juegos/starcraft-remastered/descarga-falla-volumen-z/) |
 
 ### Sistema
 
