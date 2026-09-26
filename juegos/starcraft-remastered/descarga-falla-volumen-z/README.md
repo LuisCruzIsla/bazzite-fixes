@@ -36,7 +36,7 @@ Características del síntoma:
 | Lanzador | Battle.net bajo Steam (shortcut no-Steam), Lutris u otro — indistinto |
 | GPU / driver | Irrelevante |
 
-Probablemente afecta también a otros juegos de Battle.net instalados bajo `Z:\` en estas distros (el Agent registra el mismo fallo para StarCraft II, Warcraft III y Heroes of the Storm), aunque sólo está confirmado el efecto en StarCraft: Remastered.
+El Agent registra el mismo fallo de volumen para **todos** los juegos de Battle.net instalados bajo `Z:\` (confirmado con StarCraft II, Warcraft III y Heroes of the Storm). El síntoma visible sólo está confirmado en StarCraft: Remastered, pero conviene relocalizar todos los juegos del prefix a la nueva letra (ver Paso 2).
 
 Ver [`casos/`](./casos/) para configuraciones específicas confirmadas.
 
@@ -96,6 +96,23 @@ done
 3. Battle.net verifica los archivos (unos segundos) y deja el juego listo para jugar.
 
 La interfaz de Battle.net puede seguir mostrando la ruta antigua con `Z:`. Lo que cuenta es la ruta guardada por el Agent, que se comprueba en la verificación.
+
+### Paso 2b — Relocalizar el resto de juegos del prefix (recomendado)
+
+Repetir "Localizar el juego" para cada juego de Battle.net del mismo prefix (StarCraft II, Warcraft III, Heroes of the Storm, etc.) con su ruta bajo la nueva letra. Así el Agent deja de registrar fallos de volumen para cualquiera de ellos.
+
+Cada juego guarda su ruta en un `.product.db` dentro de su carpeta. Para revisar todos de una vez:
+
+```bash
+cd /var/mnt/<disco>/<biblioteca>
+for g in */; do
+  [ -f "$g.product.db" ] && echo "$g -> $(strings "$g.product.db" | grep -oE '[A-Z]:/.*' | head -1)"
+done
+```
+
+Ninguno debe empezar por `Z:/`.
+
+No confundir con el aviso de Heroes of the Storm **"Requisitos incumplidos: Esperando que finalice la descarga del modo de juego"** en la pestaña Contienda: persiste con el juego ya en `D:` y sin fallos de volumen, y aparece fuera de la ventana en que hay Contienda activa (días 1-5 de cada mes). Relocalizar no lo resuelve.
 
 ### Paso 3 — Abrir el juego
 
