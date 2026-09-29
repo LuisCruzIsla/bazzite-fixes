@@ -18,6 +18,7 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | Warcraft III: Reforged — el login falla con "Please check your VPN" (crypt32 de Wine 11.0) | Solución confirmada | [`juegos/warcraft-3-reforged/login-vpn-error-crypt32/`](./juegos/warcraft-3-reforged/login-vpn-error-crypt32/) |
 | StarCraft: Remastered — "No se pudo descargar" al iniciar (Wine no lee el volumen de `Z:` en Fedora Atomic) | Solución confirmada | [`juegos/starcraft-remastered/descarga-falla-volumen-z/`](./juegos/starcraft-remastered/descarga-falla-volumen-z/) |
 | Juegos Unity — texto de la interfaz invisible por un índice de idioma guardado fuera de rango | Solución confirmada | [`juegos/unity/texto-invisible-indice-idioma-guardado/`](./juegos/unity/texto-invisible-indice-idioma-guardado/) |
+| Path of Exile 2 — Exiled Exchange 2 no aparece, deja de responder o `Ctrl+D` no hace nada en GNOME | Solución confirmada (4 capas) | [`juegos/path-of-exile-2/exiled-exchange-2-overlay-linux/`](./juegos/path-of-exile-2/exiled-exchange-2-overlay-linux/) |
 
 ### Sistema
 
