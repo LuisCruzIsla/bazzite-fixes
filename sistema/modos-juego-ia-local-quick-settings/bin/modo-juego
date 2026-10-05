@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Switch a modo JUEGO: libera GPU/RAM apagando la IA local.
+set -euo pipefail
+
+echo "[modo-juego] Descargando modelos y apagando Ollama..."
+# "activating" tambien cuenta: un servicio en bucle de reinicios no esta "active".
+if [ "$(systemctl is-active ollama)" != inactive ]; then
+  ollama ps 2>/dev/null | awk 'NR > 1 {print $1}' | while read -r m; do
+    ollama stop "$m" 2>/dev/null || true
+  done || true
+  sudo systemctl stop ollama
+fi
+
+echo "[modo-juego] Ollama detenido."
+if command -v nvidia-smi >/dev/null 2>&1; then
+  used=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits)
+  echo "[modo-juego] VRAM en uso: ${used} MiB"
+fi
+echo "[modo-juego] GPU/RAM libres. A jugar. (Lanza juegos con: gamemoderun %command%)"

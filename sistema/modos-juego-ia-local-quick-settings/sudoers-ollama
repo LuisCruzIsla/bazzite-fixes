@@ -1,0 +1,3 @@
+# /etc/sudoers.d/ollama-modos
+# Sustituir TU_USUARIO. Validar con: sudo visudo -cf /etc/sudoers.d/ollama-modos
+TU_USUARIO ALL=(root) NOPASSWD: /usr/bin/systemctl start ollama, /usr/bin/systemctl stop ollama

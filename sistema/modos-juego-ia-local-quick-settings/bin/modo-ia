@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Switch a modo IA LOCAL: enciende Ollama solo para esta sesion de trabajo.
+set -euo pipefail
+
+echo "[modo-ia] Encendiendo Ollama..."
+sudo systemctl start ollama
+
+for i in $(seq 1 20); do
+  if curl -sf http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+    echo "[modo-ia] Ollama listo en http://127.0.0.1:11434"
+    ollama list 2>/dev/null | head -10
+    exit 0
+  fi
+  sleep 0.5
+done
+# Restart=always deja el servicio reiniciandose en bucle si no llega a arrancar.
+sudo systemctl stop ollama
+echo "[modo-ia] Ollama no respondio y se detuvo; revisa: journalctl -u ollama -b"
+exit 1

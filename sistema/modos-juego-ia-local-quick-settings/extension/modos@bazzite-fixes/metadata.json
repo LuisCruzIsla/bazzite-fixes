@@ -1,0 +1,6 @@
+{
+  "uuid": "modos@bazzite-fixes",
+  "name": "Modos",
+  "description": "Switch juego / IA local / visita desde Quick Settings",
+  "shell-version": ["50"]
+}

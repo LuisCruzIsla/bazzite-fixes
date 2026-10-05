@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Progreso de la precompilacion de shaders de Steam (fossilize_replay), leido de shader_log.txt.
+# Steam compila un juego a la vez; el resto de la tanda espera en cola.
+# Salida (campos separados por TAB):
+#   TOTAL  <pct global>  <juegos listos>  <juegos en la tanda>
+#   <estado: comp|cola|listo>  <pct>  <hechos>  <total>  <nombre>     (una linea por juego)
+# Sale con 1 si no hay nada compilando.
+set -uo pipefail
+
+STEAM="$HOME/.local/share/Steam"
+LOG="$STEAM/logs/shader_log.txt"
+
+pid=$(pgrep -x steam | head -n 1)
+[ -n "$pid" ] && [ -r "$LOG" ] || exit 1
+# Solo cuenta lo ocurrido desde que arranco este Steam: una tanda cortada por un apagado no debe quedar "compilando".
+inicio=$(date -d "$(LC_ALL=C ps -o lstart= -p "$pid")" '+%F %T') || exit 1
+
+tanda=$(grep -E 'Queuing depot manifest|Starting processing job for app|Starting replay of FOZ databases for AppID|Still replaying [0-9]+ \(|fossilize_replay completed' "$LOG" \
+  | gawk -v ini="$inicio" '
+    function alta(id) {
+      # Evento nuevo con toda la tanda anterior terminada: empieza otra tanda.
+      if (n > 0 && pendientes == 0) { n = 0; delete st; delete pct; delete h; delete t; delete ord }
+      if (!(id in st)) { ord[++n] = id; st[id] = ""; pct[id] = 0; h[id] = 0; t[id] = 0 }
+    }
+    function pasar(id, nuevo) {
+      if (st[id] != "listo" && nuevo == "listo") pendientes--
+      if ((st[id] == "listo" || st[id] == "") && nuevo != "listo") pendientes++
+      st[id] = nuevo
+    }
+    substr($0, 2, 19) < ini { next }
+    match($0, /AppID ([0-9]+) \] Queuing depot manifest/, m) { alta(m[1]); pasar(m[1], "cola"); pct[m[1]] = 0; next }
+    match($0, /Starting processing job for app ([0-9]+)!/, m) { alta(m[1]); pasar(m[1], "comp"); pct[m[1]] = 0; h[m[1]] = 0; t[m[1]] = 0; next }
+    match($0, /Starting replay of FOZ databases for AppID ([0-9]+)/, m) { alta(m[1]); pasar(m[1], "comp"); next }
+    match($0, /Still replaying ([0-9]+) \(([0-9]+)%, ([0-9]+)\/([0-9]+)\)/, m) { alta(m[1]); pasar(m[1], "comp"); pct[m[1]] = m[2]; h[m[1]] = m[3]; t[m[1]] = m[4]; next }
+    match($0, /App ID ([0-9]+) \] fossilize_replay completed/, m) { if (m[1] in st) { pasar(m[1], "listo"); pct[m[1]] = 100 } next }
+    END {
+      for (i = 1; i <= n; i++) printf "%s\t%s\t%s\t%s\t%s\n", st[ord[i]], pct[ord[i]], h[ord[i]], t[ord[i]], ord[i]
+    }')
+[ -n "$tanda" ] || exit 1
+
+# Entre un juego y otro fossilize_replay desaparece unos segundos; el log cubre ese hueco.
+if ! grep -q '^comp' <<<"$tanda" && ! pgrep -f fossilize_replay >/dev/null; then
+  exit 1
+fi
+
+mapfile -t libs < <(sed -nE 's/^[[:space:]]*"path"[[:space:]]+"(.*)"$/\1/p' "$STEAM/steamapps/libraryfolders.vdf" 2>/dev/null)
+
+nombre_de() {
+  local lib acf
+  for lib in "${libs[@]}"; do
+    acf="$lib/steamapps/appmanifest_$1.acf"
+    if [ -r "$acf" ]; then
+      sed -nE 's/^[[:space:]]*"name"[[:space:]]+"(.*)"$/\1/p' "$acf" | head -n 1
+      return
+    fi
+  done
+  echo "AppID $1"
+}
+
+suma=0 juegos=0 listos=0 filas=""
+while IFS=$'\t' read -r estado pct hechos total appid; do
+  suma=$((suma + pct))
+  juegos=$((juegos + 1))
+  [ "$estado" = "listo" ] && listos=$((listos + 1))
+  filas+="$estado"$'\t'"$pct"$'\t'"$hechos"$'\t'"$total"$'\t'"$(nombre_de "$appid")"$'\n'
+done <<<"$tanda"
+
+printf 'TOTAL\t%s\t%s\t%s\n%s' "$((suma / juegos))" "$listos" "$juegos" "$filas"

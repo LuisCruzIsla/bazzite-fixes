@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Switch a modo VISITA: audio por la tele (HDMI) sin el EQ del headset.
+# "modo-visita off" vuelve al preset gaming del G Pro X.
+set -euo pipefail
+
+EE="flatpak run com.github.wwmm.easyeffects"
+
+# Sin instancia primaria, "easyeffects -l" se convierte en ella y no retorna nunca.
+cargar_preset() {
+  if ! pgrep -x easyeffects >/dev/null; then
+    setsid -f $EE --hide-window </dev/null >/dev/null 2>&1
+    for _ in $(seq 1 20); do
+      pgrep -x easyeffects >/dev/null && break
+      sleep 0.5
+    done
+    sleep 2
+  fi
+  timeout 10 $EE -l "$1" </dev/null >/dev/null 2>&1 \
+    || echo "[modo-visita] EasyEffects no cargo el preset $1"
+}
+
+if [ "${1:-}" = "status" ]; then
+  # Visita = salida por defecto HDMI. easyeffects_sink o el headset son modo juego / IA.
+  pactl get-default-sink | grep -q hdmi
+  exit
+fi
+
+if [ "${1:-}" = "off" ]; then
+  cargar_preset gaming
+  headset=$(pactl list short sinks | awk '/Logitech_PRO_X/ {print $2; exit}')
+  if [ -n "$headset" ]; then
+    pactl set-default-sink "$headset"
+    echo "[modo-visita] Apagado: preset gaming, salida $headset"
+  else
+    echo "[modo-visita] Apagado: preset gaming. G Pro X no conectado; la salida no se cambio."
+  fi
+  exit 0
+fi
+
+hdmi=$(pactl list short sinks | awk '/hdmi/ {print $2; exit}')
+if [ -z "$hdmi" ]; then
+  echo "[modo-visita] No hay salida HDMI disponible; revisa el cable o el perfil de la tarjeta."
+  exit 1
+fi
+
+pactl set-default-sink "$hdmi"
+pactl set-sink-mute "$hdmi" 0
+pactl set-sink-volume "$hdmi" 100%
+cargar_preset visita
+
+echo "[modo-visita] Salida: $hdmi al 100 %, sin EQ. Regula el volumen con el control de la tele."

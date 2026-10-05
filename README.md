@@ -31,6 +31,8 @@ Cada solución está organizada por categoría → problema → casos confirmado
 | Vesktop/Discord — pantalla negra al compartir pantalla en NVIDIA | Solución confirmada | [`sistema/vesktop-screenshare-negro-nvidia/`](./sistema/vesktop-screenshare-negro-nvidia/) |
 | OpenRGB (Flatpak) — el RGB no se controla ni persiste tras reiniciar | Solución confirmada | [`sistema/openrgb-flatpak-rgb-persistente/`](./sistema/openrgb-flatpak-rgb-persistente/) |
 | MangoHud — solo aparece si se edita las opciones de lanzamiento de cada juego | Solución confirmada | [`sistema/mangohud-global-todos-los-juegos/`](./sistema/mangohud-global-todos-los-juegos/) |
+| Ollama — el servicio systemd no arranca y queda reiniciándose en bucle (`/usr` de solo lectura, ruta de modelos no atravesable) | Solución confirmada | [`sistema/ollama-servicio-no-arranca-fedora-atomic/`](./sistema/ollama-servicio-no-arranca-fedora-atomic/) |
+| GNOME Quick Settings — alternar entre modo juego e IA local (Ollama) sin terminal | Workaround (scripts confirmados, extensión en validación) | [`sistema/modos-juego-ia-local-quick-settings/`](./sistema/modos-juego-ia-local-quick-settings/) |
 
 ### Periféricos
 
