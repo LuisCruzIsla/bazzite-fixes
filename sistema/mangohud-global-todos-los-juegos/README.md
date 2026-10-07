@@ -104,8 +104,10 @@ cp MangoHud.conf ~/.config/MangoHud/MangoHud.conf
 La config incluida usa un layout de **una sola línea** (`horizontal` + `hud_compact` + `hud_no_margin`), pensado para ser tan poco invasivo como el contador de Steam pero con los datos que aquel no da:
 
 ```
-GPU 68% 6.2GiB | CPU 91% 14.1GiB | 142 FPS 7.0ms | 1920x1080
+GPU 68% 6.2GiB | CPU 91% 14.1GiB | 142 FPS 7.0ms | 1920x1080 | 16:04:32
 ```
+
+El último campo es la hora del reloj del sistema (`time` + `time_no_label`), útil en pantalla completa, donde la barra del escritorio no se ve. El formato se cambia con `time_format`, que usa la sintaxis de `strftime`.
 
 La clave del diagnóstico son `gpu_load_change` y `cpu_load_change` con umbrales en 60 y 90: ambos porcentajes cambian de color al cruzarlos. **GPU en verde con CPU en rojo significa CPU-bound**, sin necesidad de leer los números.
 
