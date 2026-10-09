@@ -56,7 +56,10 @@ class FilaProgreso extends PopupMenu.PopupBaseMenuItem {
         });
         this._relleno = new St.Widget({
             x_align: Clutter.ActorAlign.START,
-            style: 'border-radius: 3px; background-color: -st-accent-color;',
+            x_expand: true,
+            y_expand: true,
+            // Sin alto propio el relleno mide 0 px: BinLayout no estira hijos sin expand.
+            style: 'height: 6px; border-radius: 3px; background-color: -st-accent-color;',
         });
         this._barra.add_child(this._relleno);
         this._barra.connect('notify::width', () => this._pintar());
