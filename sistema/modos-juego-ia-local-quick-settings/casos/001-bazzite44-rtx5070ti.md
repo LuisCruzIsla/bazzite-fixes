@@ -2,7 +2,7 @@
 
 **Confirmado por:** [@LuisCruzIsla](https://github.com/LuisCruzIsla)
 **Fecha:** 2026-10-05
-**Estado:** Fix falla parcialmente — `modo-ia` y `modo-juego` confirmados por terminal con el servicio real; la extensión carga sin errores, pero el interruptor Visita y la sección de shaders no se han validado desde el menú
+**Estado:** Fix falla parcialmente — `modo-ia` y `modo-juego` confirmados por terminal con el servicio real; la extensión carga sin errores, la sección de shaders validada desde el menú con Steam compilando (2026-10-10); el interruptor Visita no se ha validado desde el menú
 
 ## Entorno
 
@@ -71,6 +71,7 @@ Ciclo completo por terminal con el servicio real:
 
 - **Origen de las correcciones:** la extensión mostró la notificación `Modos: modo-juego fallo`. El script usaba `ollama stop --all` y `ollama ps --format`, inexistentes en 0.21.2, y abortaba antes de parar el servicio. Fallaba siempre, también con Ollama ya apagado.
 - **Segundo fallo encontrado al probar:** el servicio no arrancaba por un problema aparte (ver [`ollama-servicio-no-arranca-fedora-atomic`](../../ollama-servicio-no-arranca-fedora-atomic/)). `modo-ia` salía con 0 y lo dejaba reiniciándose en bucle; `modo-juego` no lo paraba por estar en `activating`.
-- **Pendiente de validar:** encender Visita desde el menú y confirmar audio por la tele; la sección de shaders con Steam compilando. `steam-shaders` sí se probó contra un `shader_log.txt` real.
+- **Pendiente de validar:** encender Visita desde el menú y confirmar audio por la tele.
+- **Shaders de Steam (validado 2026-10-10):** las barras se rellenan según el avance tras dar alto al relleno (antes medía 0 px y solo se veía el fondo gris).
 - **Coste:** `steam-shaders` tarda unos 0,04 s cada 10 s.
 - **Journal de `gnome-shell`:** sin errores de la extensión en la sesión de la prueba.
